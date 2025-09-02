@@ -7,24 +7,29 @@ const CameraControl = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [recordedVideoUrl, setRecordedVideoUrl] = useState(null);
+  const [facingMode, setFacingMode] = useState("user"); // 'user' (depan) atau 'environment' (belakang)
 
-  // Fungsi untuk memulai stream dari kamera
-  const startStream = async () => {
+  // Fungsi untuk memulai stream dari kamera dengan facingMode yang ditentukan
+  const startStream = async (mode) => {
+    // Hentikan stream yang ada sebelum memulai yang baru
+    stopStream();
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+      const constraints = {
+        video: { facingMode: mode },
         audio: true,
-      });
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
+      videoRef.current.srcObject = stream;
       setIsCameraOn(true);
-      setRecordedVideoUrl(null); // Reset URL video yang direkam
+      setRecordedVideoUrl(null);
+      setFacingMode(mode); // Set status facingMode
     } catch (err) {
       console.error("Gagal mendapatkan akses kamera:", err);
+      setIsCameraOn(false);
       alert(
-        "Akses kamera ditolak atau tidak tersedia. Pastikan Anda menggunakan HTTPS."
+        "Kamera tidak tersedia atau akses ditolak. Pastikan Anda menggunakan HTTPS."
       );
     }
   };
@@ -75,6 +80,12 @@ const CameraControl = () => {
     }
   };
 
+  // Mengubah kamera
+  const toggleFacingMode = () => {
+    const newMode = facingMode === "user" ? "environment" : "user";
+    startStream(newMode);
+  };
+
   // Cleanup saat komponen dilepas
   useEffect(() => {
     return () => {
@@ -101,9 +112,16 @@ const CameraControl = () => {
       />
       <div style={{ marginTop: "10px" }}>
         {!isCameraOn ? (
-          <button onClick={startStream}>Hidupkan Kamera</button>
+          <button onClick={() => startStream(facingMode)}>
+            Hidupkan Kamera
+          </button>
         ) : (
-          <button onClick={stopStream}>Matikan Kamera</button>
+          <>
+            <button onClick={stopStream}>Matikan Kamera</button>
+            <button onClick={toggleFacingMode} style={{ marginLeft: "10px" }}>
+              Ganti Kamera
+            </button>
+          </>
         )}
 
         {isCameraOn && (
