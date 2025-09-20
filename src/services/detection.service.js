@@ -1,3 +1,5 @@
+import { ENDPOINTS } from "../lib/endpoints";
+
 const detectionImage = async (imageFile, location) => {
   // 1. Create a FormData object
   const formData = new FormData();
@@ -8,7 +10,7 @@ const detectionImage = async (imageFile, location) => {
   formData.append("longitude", location.longitude);
 
   // 3. Send the FormData object in the request body
-  const response = await fetch("http://127.0.0.1:8000/detection/image", {
+  const response = await fetch(`${ENDPOINTS}/detection/image`, {
     method: "POST",
     body: formData,
   });
