@@ -1,80 +1,28 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import Webcam from "react-webcam";
 import { Button } from "../../components/ui/button";
 import DetectionService from "../../services/detection.service";
 import { Loader } from "lucide-react";
 
+const videoConstraints = {
+  width: 640,
+  height: 480,
+  facingMode: "user",
+};
+
 const DetectionImages = () => {
   const [response, setResponse] = useState();
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
+  const webcamRef = useRef(null);
   const [image, setImage] = useState(null);
-  const [imageBlob, setImageBlob] = useState(null);
-  const [facingMode, setFacingMode] = useState("user");
   const [location, setLocation] = useState(null);
-  const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [newDetect, setNewDetect] = useState(true);
-  // Fungsi untuk mengakses kamera
-  const startCamera = async () => {
-    // Stop any existing camera stream first
-    if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = videoRef.current.srcObject.getTracks();
-      tracks.forEach((track) => track.stop());
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: facingMode },
-        width: { ideal: 640 }, // lebih ringan dari default
-        height: { ideal: 480 },
-      });
-      videoRef.current.srcObject = stream;
-    } catch (err) {
-      console.error("Error accessing camera:", err);
-    }
-  };
+  const [facingMode, setFacingMode] = useState("user");
+  const [imageBlob, setImageBlob] = useState(null);
 
   useEffect(() => {
     getLocation();
-    startCamera(); // Panggil fungsi saat komponen dimuat atau `facingMode` berubah
-  }, [facingMode]);
-
-  // Fungsi untuk memutar kamera
-  const flipCamera = () => {
-    setFacingMode((currentMode) =>
-      currentMode === "user" ? "environment" : "user"
-    );
-  };
-
-  const takePicture = async () => {
-    // Logic untuk mengambil gambar (sama seperti sebelumnya)
-    setNewDetect(true);
-    setIsLoading(true);
-    const locationData = await getLocation();
-
-    setLocation(locationData);
-
-    const canvas = canvasRef.current;
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-
-    const context = canvas.getContext("2d");
-    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-
-    const imageDataUrl = canvas.toDataURL("image/jpeg");
-    setImage(imageDataUrl);
-
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          setImageBlob(blob);
-        }
-      },
-      "image/jpeg",
-      0.7
-    );
-    setIsLoading(false);
-  };
+  }, []);
 
   const getLocation = () => {
     return new Promise((resolve, reject) => {
@@ -93,6 +41,37 @@ const DetectionImages = () => {
     });
   };
 
+  const dataURLtoBlob = (dataurl) => {
+    const arr = dataurl.split(",");
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  };
+
+  const takePicture = useCallback(async () => {
+    setNewDetect(true);
+    setIsLoading(true);
+    const locationData = await getLocation();
+    setLocation(locationData);
+
+    const imageSrc = webcamRef.current.getScreenshot({
+      width: videoConstraints.width,
+      height: videoConstraints.height,
+    });
+    setImage(imageSrc);
+
+    // Convert Base64 string to Blob object
+    const blob = dataURLtoBlob(imageSrc);
+    setImageBlob(blob);
+
+    setIsLoading(false);
+  }, [webcamRef]);
+
   const submitDetection = async () => {
     setIsLoading(true);
     try {
@@ -107,24 +86,36 @@ const DetectionImages = () => {
       setIsLoading(false);
     }
   };
+  const flipCamera = () => {
+    setFacingMode((currentMode) =>
+      currentMode === "user" ? "environment" : "user"
+    );
+  };
 
   return (
     <div className="justify-center flex py-10">
       <div>
-        <video ref={videoRef} autoPlay playsInline muted />
+        {image ? (
+          <img src={image} alt="Taken" className="mt-8" />
+        ) : (
+          <Webcam
+            audio={false}
+            ref={webcamRef}
+            mirrored={facingMode === "user"}
+            videoConstraints={{ ...videoConstraints, facingMode: facingMode }}
+          />
+        )}
         <div className="grid grid-cols-3 gap-x-4 mt-8">
-          <Button className="col" onClick={takePicture} disabled={isLoading}>
+          <Button onClick={takePicture} disabled={isLoading}>
             {isLoading ? (
               <span className="flex items-center">
-                <Loader className="mr-2 animate-spin" /> Ambil Gambar
+                <Loader className="mr-2 animate-spin" /> Ambil Gambar      
               </span>
             ) : (
               "Ambil Gambar"
             )}
           </Button>
-          <Button className="col" onClick={flipCamera}>
-            Putar Kamera
-          </Button>
+          <Button onClick={flipCamera}>Putar Kamera</Button>
           <Button
             className="col bg-emerald-600 text-white"
             onClick={submitDetection}
@@ -149,7 +140,6 @@ const DetectionImages = () => {
             className="mt-8"
           />
         )}
-        <canvas ref={canvasRef} style={{ display: "none" }} />
       </div>
     </div>
   );
