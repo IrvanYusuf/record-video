@@ -103,7 +103,7 @@ const DetectionImages = () => {
       setNewDetect(false);
     } catch (error) {
       console.log(error);
-
+      alert(error);
       setIsLoading(false);
     }
   };
