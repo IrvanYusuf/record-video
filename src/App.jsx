@@ -1,8 +1,8 @@
 import { Route, Routes } from "react-router-dom";
 import CameraSelector from "./Camera";
 import CameraControlWithLocation from "./CameraWithLocation";
-import Menu from "./components/menus/menu.jsx";
 import DetectionImages from "./pages/detection-images/detection-images.jsx";
+import MenuHome from "./components/menus/MenuHome.jsx";
 
 function App() {
   return (
@@ -10,7 +10,7 @@ function App() {
       {/* <CameraSelector /> */}
       {/* <CameraControlWithLocation /> */}
       <Routes>
-        <Route index element={<Menu />} />
+        <Route index element={<MenuHome />} />
         <Route path="/detection-images" element={<DetectionImages />} />
       </Routes>
     </div>

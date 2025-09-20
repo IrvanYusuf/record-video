@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-const Menu = () => {
+const MenuHome = () => {
   return (
     <div className="h-screen">
       <div className="flex items-center space-x-4 justify-center h-full">
@@ -22,4 +22,4 @@ const Menu = () => {
   );
 };
 
-export default Menu;
+export default MenuHome;
