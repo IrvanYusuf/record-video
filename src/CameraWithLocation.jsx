@@ -1,18 +1,23 @@
 import { useRef, useState, useEffect } from "react";
+// import { uploadData } from "./lib/utils";
 
 const CameraControlWithLocation = () => {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const watchIdRef = useRef(null); // Ref untuk ID watchPosition
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [fps, setFps] = useState(0);
 
+  // #################
+  const [blob, setBlob] = useState();
   const [isRecording, setIsRecording] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [recordedVideoUrl, setRecordedVideoUrl] = useState(null);
   const [facingMode, setFacingMode] = useState("user");
   const [locationData, setLocationData] = useState([]); // State untuk menyimpan data lokasi
   const [permissionStatus, setPermissionStatus] = useState("idle"); // 'idle', 'granted', 'denied'
-
+  const [recordStartTime, setRecordStartTime] = useState(null);
   // Fungsi untuk memulai stream dari kamera
   const startStream = async (mode) => {
     stopStream();
@@ -70,11 +75,13 @@ const CameraControlWithLocation = () => {
       const blob = new Blob(recordedChunks, { type: "video/webm" });
       const url = URL.createObjectURL(blob);
       setRecordedVideoUrl(url);
+      setBlob(blob);
     };
 
     // Mulai perekaman video
     mediaRecorderRef.current.start();
     setIsRecording(true);
+    setRecordStartTime(Date.now());
     // Mulai melacak lokasi
     startLocationTracking();
   };
@@ -133,11 +140,12 @@ const CameraControlWithLocation = () => {
       return;
     } // Menyiapkan header CSV dengan kolom terpisah
 
-    const headers = ["latitude", "longitude", "timestamp"]; // Mengubah data menjadi baris-baris CSV
+    const headers = ["latitude", "longitude", "timestamp", "recordStartTime"]; // Mengubah data menjadi baris-baris CSV
     const rows = locationData.map((loc) => [
       loc.latitude,
       loc.longitude,
       new Date(loc.timestamp).toISOString(), // Mengubah timestamp menjadi format tanggal yang mudah dibaca
+      new Date(recordStartTime).toISOString(),
     ]); // Menggabungkan header dan baris data
 
     const csvContent = [
@@ -163,6 +171,23 @@ const CameraControlWithLocation = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let intervalId;
+    if (isRecording) {
+      intervalId = setInterval(() => {
+        const elapsedSec = (Date.now() - recordStartTime) / 1000;
+        setElapsedTime(Date.now() - recordStartTime);
+        // FPS kasar berdasarkan jumlah titik lokasi/frame
+        if (elapsedSec > 0) {
+          setFps((locationData.length / elapsedSec).toFixed(1));
+        }
+      }, 1000);
+    } else {
+      clearInterval(intervalId);
+    }
+    return () => clearInterval(intervalId);
+  }, [isRecording, recordStartTime, locationData.length]);
+
   return (
     <div
       style={{
@@ -173,6 +198,7 @@ const CameraControlWithLocation = () => {
         alignItems: "center",
       }}
     >
+      Durasi: {(elapsedTime / 1000).toFixed(0)}s | FPS: {fps}
       <video
         ref={videoRef}
         autoPlay
@@ -202,14 +228,12 @@ const CameraControlWithLocation = () => {
           </button>
         )}
       </div>
-
       {/* Menampilkan status pelacakan lokasi */}
       {isRecording && locationData.length > 0 && (
         <p style={{ marginTop: "10px" }}>
           Melacak lokasi... ({locationData.length} titik terkumpul)
         </p>
       )}
-
       {/* Menampilkan hasil pratinjau */}
       {recordedVideoUrl && (
         <div style={{ marginTop: "20px" }}>
@@ -237,6 +261,12 @@ const CameraControlWithLocation = () => {
               style={{ padding: "8px 12px", border: "1px solid #ccc" }}
             >
               Unduh Data Excel
+            </button>
+            <button
+              // onClick={() => uploadData(blob, locationData, recordStartTime)}
+              style={{ padding: "8px 12px", border: "1px solid #ccc" }}
+            >
+              Upload
             </button>
           </div>
           <br />
