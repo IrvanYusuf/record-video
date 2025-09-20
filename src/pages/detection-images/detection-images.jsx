@@ -24,7 +24,9 @@ const DetectionImages = () => {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: facingMode }, // Gunakan state `facingMode`
+        video: { facingMode: facingMode },
+        width: { ideal: 640 }, // lebih ringan dari default
+        height: { ideal: 480 },
       });
       videoRef.current.srcObject = stream;
     } catch (err) {
@@ -69,7 +71,7 @@ const DetectionImages = () => {
         }
       },
       "image/jpeg",
-      0.9
+      0.7
     );
     setIsLoading(false);
   };
@@ -114,7 +116,7 @@ const DetectionImages = () => {
           <Button className="col" onClick={takePicture} disabled={isLoading}>
             {isLoading ? (
               <span className="flex items-center">
-                <Loader className="mr-2" /> Ambil Gambar
+                <Loader className="mr-2 animate-spin" /> Ambil Gambar
               </span>
             ) : (
               "Ambil Gambar"
@@ -129,7 +131,13 @@ const DetectionImages = () => {
             variant={"ghost"}
             disabled={!image || isLoading}
           >
-            Deteksi
+            {isLoading ? (
+              <span className="flex items-center">
+                <Loader className="mr-2 animate-spin" /> Deteksi
+              </span>
+            ) : (
+              "Deteksi"
+            )}
           </Button>
         </div>
         {newDetect ? (
