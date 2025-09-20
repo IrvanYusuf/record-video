@@ -1,8 +1,8 @@
 import { Route, Routes } from "react-router-dom";
 import CameraSelector from "./Camera";
 import CameraControlWithLocation from "./CameraWithLocation";
-import Menu from "./components/menus/menu";
-import DetectionImages from "./pages/detection-images/detection-images";
+import Menu from "./components/menus/menu.jsx";
+import DetectionImages from "./pages/detection-images/detection-images.jsx";
 
 function App() {
   return (
