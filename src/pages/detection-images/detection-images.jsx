@@ -5,8 +5,6 @@ import DetectionService from "../../services/detection.service";
 import { Loader } from "lucide-react";
 
 const videoConstraints = {
-  width: 640,
-  height: 480,
   facingMode: "user",
 };
 
@@ -59,10 +57,7 @@ const DetectionImages = () => {
     const locationData = await getLocation();
     setLocation(locationData);
 
-    const imageSrc = webcamRef.current.getScreenshot({
-      width: videoConstraints.width,
-      height: videoConstraints.height,
-    });
+    const imageSrc = webcamRef.current.getScreenshot();
     setImage(imageSrc);
 
     // Convert Base64 string to Blob object
@@ -95,16 +90,12 @@ const DetectionImages = () => {
   return (
     <div className="justify-center flex py-10">
       <div>
-        {image ? (
-          <img src={image} alt="Taken" className="mt-8" />
-        ) : (
-          <Webcam
-            audio={false}
-            ref={webcamRef}
-            mirrored={facingMode === "user"}
-            videoConstraints={{ ...videoConstraints, facingMode: facingMode }}
-          />
-        )}
+        <Webcam
+          audio={false}
+          ref={webcamRef}
+          mirrored={facingMode === "user"}
+          videoConstraints={{ ...videoConstraints, facingMode: facingMode }}
+        />
         <div className="grid grid-cols-3 gap-x-4 mt-8">
           <Button onClick={takePicture} disabled={isLoading}>
             {isLoading ? (
