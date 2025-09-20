@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../../components/ui/button";
 import DetectionService from "../../services/detection.service";
+import { Loader } from "lucide-react";
 
 const DetectionImages = () => {
   const [response, setResponse] = useState();
@@ -46,6 +47,7 @@ const DetectionImages = () => {
   const takePicture = async () => {
     // Logic untuk mengambil gambar (sama seperti sebelumnya)
     setNewDetect(true);
+    setIsLoading(true);
     const locationData = await getLocation();
 
     setLocation(locationData);
@@ -69,6 +71,7 @@ const DetectionImages = () => {
       "image/jpeg",
       0.9
     );
+    setIsLoading(false);
   };
 
   const getLocation = () => {
@@ -108,8 +111,14 @@ const DetectionImages = () => {
       <div>
         <video ref={videoRef} autoPlay playsInline muted />
         <div className="grid grid-cols-3 gap-x-4 mt-8">
-          <Button className="col" onClick={takePicture}>
-            Ambil Gambar
+          <Button className="col" onClick={takePicture} disabled={isLoading}>
+            {isLoading ? (
+              <span className="flex items-center">
+                <Loader className="mr-2" /> Ambil Gambar
+              </span>
+            ) : (
+              "Ambil Gambar"
+            )}
           </Button>
           <Button className="col" onClick={flipCamera}>
             Putar Kamera
