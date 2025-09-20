@@ -91,6 +91,7 @@ const DetectionImages = () => {
     <div className="justify-center flex py-10">
       <div>
         <Webcam
+          className="px-4"
           audio={false}
           ref={webcamRef}
           mirrored={facingMode === "user"}
@@ -122,15 +123,17 @@ const DetectionImages = () => {
             )}
           </Button>
         </div>
-        {newDetect ? (
-          image && <img src={image} alt="Taken" className="mt-8" />
-        ) : (
-          <img
-            src={response.url}
-            alt="Detection image result"
-            className="mt-8"
-          />
-        )}
+        <div className="px-4">
+          {newDetect ? (
+            image && <img src={image} alt="Taken" className="mt-8" />
+          ) : (
+            <img
+              src={response.url}
+              alt="Detection image result"
+              className="mt-8"
+            />
+          )}
+        </div>
       </div>
     </div>
   );
